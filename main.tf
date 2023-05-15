@@ -15,37 +15,25 @@ resource "aws_s3_bucket_website_configuration" "bucket" {
     key = "error.html"
   }
 }
+resource "aws_s3_bucket_ownership_controls" "example" {
+  bucket = aws_s3_bucket.bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 
 resource "aws_s3_bucket_acl" "bucket" {
+  depends_on = [aws_s3_bucket_ownership_controls.example]
   bucket = aws_s3_bucket.bucket.id
 
-  acl = "public-read"
+  acl = "private"
 }
 
-resource "aws_s3_bucket_policy" "policy" {
-  bucket = aws_s3_bucket.bucket.id
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-                "s3:GetObject"
-            ],
-            "Resource": [
-                "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*"
-            ]
-        }
-    ]
-}
-EOF
-}
+
 
 resource "aws_s3_object" "webapp" {
-  acl          = "public-read"
+  acl          = "private"
   key          = "index.html"
   bucket       = aws_s3_bucket.bucket.id
   content      = file("${path.module}/assets/index.html")
